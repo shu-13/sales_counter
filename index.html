@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f3ee">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="販売カウンター">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>販売カウンター</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-180.png">
+  <link rel="icon" href="./icon-180.png" type="image/png">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f5f3ee;
+      --panel: #fffefa;
+      --ink: #292820;
+      --muted: #77766c;
+      --line: #e4e1d8;
+      --accent: #e05b3f;
+      --accent-dark: #bd422c;
+      --green: #376b56;
+      --sans: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 3px solid #e8a08f; outline-offset: 2px;
+    }
+    .wrap { max-width: 1160px; margin: auto; padding: 28px 22px 60px; }
+    header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 24px; }
+    .eyebrow { margin: 0 0 5px; color: var(--accent-dark); font-size: .75rem; font-weight: 800; letter-spacing: .14em; }
+    h1 { width: fit-content; margin: 0; font-size: clamp(1.7rem, 4vw, 2.45rem); letter-spacing: -.04em; cursor: pointer; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none; }
+    .lead { margin: 8px 0 0; color: var(--muted); font-size: .92rem; }
+    .header-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+    .button { border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--ink); padding: 9px 13px; font-weight: 700; }
+    .button:hover { border-color: #b7b2a5; }
+    .button.small { padding: 7px 10px; font-size: .82rem; }
+    .button.danger { color: #a63d2b; }
+    .notice { display: none; margin: 0 0 16px; padding: 11px 14px; border: 1px solid #e3b2a6; border-radius: 10px; background: #fff2ee; color: #923d2c; font-size: .9rem; }
+    .notice.show { display: block; }
+    .layout { display: grid; grid-template-columns: 1fr; align-items: start; gap: 18px; }
+    .panel { min-width: 0; border: 1px solid var(--line); border-radius: 15px; background: var(--panel); box-shadow: 0 5px 18px #37301a08; }
+    .panel-inner { padding: 19px; }
+    h2 { margin: 0; font-size: 1.1rem; letter-spacing: -.02em; }
+    .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 15px; }
+    .subtle { color: var(--muted); font-size: .82rem; }
+    label { display: grid; gap: 6px; color: #55544b; font-size: .82rem; font-weight: 750; }
+    input[type="date"], select {
+      width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 8px;
+      background: #fff; color: var(--ink); padding: 10px 11px;
+    }
+    .product-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 10px; }
+    .product-card { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; align-items: center; gap: 13px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+    .product-thumb { display: grid; width: 72px; height: 72px; place-items: center; overflow: hidden; border-radius: 9px; background: #f0eee7; color: #969184; font-size: 1.4rem; }
+    .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .product-info { min-width: 0; }
+    .product-name { overflow-wrap: anywhere; margin: 0; font-size: 1rem; font-weight: 800; }
+    .product-person { margin: 4px 0 8px; color: var(--muted); font-size: .8rem; }
+    .product-total { color: var(--green); font-size: .82rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+    .card-actions { display: grid; grid-template-columns: auto auto; align-items: center; gap: 7px; }
+    .count-btn { min-width: 94px; border: 0; border-radius: 9px; background: var(--green); color: white; padding: 12px 13px; font-weight: 850; white-space: nowrap; }
+    .count-btn:hover { background: #28523f; }
+    .minus-btn { min-width: 58px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: #8a4538; padding: 11px 9px; font-weight: 800; }
+    .minus-btn:hover { border-color: #c98e82; background: #fff7f4; }
+    .empty { padding: 30px 12px; color: var(--muted); text-align: center; font-size: .9rem; }
+    .summary { margin-top: 18px; }
+    .summary-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 18px 19px 14px; border-bottom: 1px solid var(--line); }
+    .summary-controls { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+    .summary-controls label { display: flex; align-items: center; gap: 7px; font-size: .76rem; }
+    .summary-controls input, .summary-controls select { width: auto; padding: 7px 8px; font-size: .82rem; }
+    .summary-total { margin: 0; padding: 12px 19px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
+    .summary-total strong { color: var(--ink); font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+    th, td { padding: 11px 15px; border-bottom: 1px solid #eeece5; text-align: left; white-space: nowrap; }
+    th { color: var(--muted); font-size: .74rem; font-weight: 750; }
+    td:last-child, th:last-child { padding-right: 19px; text-align: right; }
+    td:first-child, th:first-child { padding-left: 19px; }
+    .number { font-weight: 800; font-variant-numeric: tabular-nums; }
+    .negative { color: #a63d2b; }
+    .bucket-label { font-weight: 750; }
+    .grouping { display: flex; gap: 8px; margin: 0 19px 14px; }
+    .group-button { border: 1px solid var(--line); border-radius: 99px; background: #fff; color: var(--muted); padding: 6px 11px; font-size: .77rem; font-weight: 750; }
+    .group-button[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: white; }
+    .footnote { margin: 12px 19px 17px; color: var(--muted); font-size: .76rem; line-height: 1.6; }
+    @media (max-width: 760px) {
+      .wrap { padding: 22px 14px 40px; }
+      header { flex-direction: column; }
+      .header-actions { justify-content: flex-start; }
+      .summary-head { flex-direction: column; }
+      .summary-controls { justify-content: flex-start; }
+    }
+    @media (max-width: 420px) {
+      .product-card { grid-template-columns: 58px minmax(0, 1fr); gap: 10px; }
+      .product-thumb { width: 58px; height: 58px; }
+      .card-actions { grid-column: 2; grid-row: 2; justify-content: start; }
+      .count-btn { min-width: 90px; }
+      .minus-btn { min-width: 54px; }
+      .panel-inner { padding: 15px; }
+      th, td { padding-left: 10px; padding-right: 10px; }
+      td:first-child, th:first-child { padding-left: 14px; }
+      td:last-child, th:last-child { padding-right: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div>
+        <p class="eyebrow">EVENT SALES LOG</p>
+        <h1 id="titleHold" aria-describedby="longPressHint">販売カウンター</h1>
+        <p class="lead" id="longPressHint">販売数と時刻を記録して、時間帯ごとに振り返れます。商品登録はタイトルを2秒長押し。</p>
+      </div>
+      <div class="header-actions">
+        <button class="button" id="exportButton" type="button">データを書き出す</button>
+        <button class="button danger" id="clearLogsButton" type="button">記録をすべて削除</button>
+      </div>
+    </header>
+
+    <div class="notice" id="appNotice" role="status" aria-live="polite"></div>
+    <div class="notice" id="notice" role="status" aria-live="polite"></div>
+    <div class="layout">
+      <section class="panel" aria-labelledby="productsTitle">
+        <div class="panel-inner">
+          <div class="section-heading">
+            <h2 id="productsTitle">登録商品</h2>
+            <span class="subtle" id="productCount"></span>
+          </div>
+          <div class="product-list" id="productList"></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel summary" aria-labelledby="summaryTitle">
+      <div class="summary-head">
+        <div>
+          <h2 id="summaryTitle">時間帯別の販売数</h2>
+          <span class="subtle">取り消し分は差し引いて集計します</span>
+        </div>
+        <div class="summary-controls">
+          <label for="dateFilter">日付 <input id="dateFilter" type="date"></label>
+          <label for="intervalFilter">区切り
+            <select id="intervalFilter">
+              <option value="30">30分</option>
+              <option value="15">15分</option>
+              <option value="60">1時間</option>
+            </select>
+          </label>
+        </div>
+      </div>
+      <p class="summary-total" id="summaryTotal"></p>
+      <div class="grouping" aria-label="集計単位">
+        <button class="group-button" type="button" data-group="product" aria-pressed="true">商品ごと</button>
+        <button class="group-button" type="button" data-group="person" aria-pressed="false">担当者ごと</button>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead id="summaryHead"></thead>
+          <tbody id="summaryBody"></tbody>
+        </table>
+      </div>
+      <p class="footnote">記録はこのブラウザー内に保存されます。ブラウザーや端末をまたいで共有する場合は「データを書き出す」でバックアップしてください。</p>
+    </section>
+  </main>
+  <script>
+    (() => {
+      'use strict';
+      const STORAGE_KEY = 'counter-timed-data-v1';
+      const state = { products: [], events: [], editingId: null, draftImage: '', groupBy: 'product' };
+      const $ = (selector) => document.querySelector(selector);
+      const notice = $('#notice');
+
+      function showNotice(message) {
+        notice.textContent = message;
+        notice.classList.add('show');
+      }
+
+      function clearNotice() {
+        notice.textContent = '';
+        notice.classList.remove('show');
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ products: state.products, events: state.events }));
+          clearNotice();
+          return true;
+        } catch (error) {
+          showNotice(`保存できませんでした。端末の空き容量を確認してください。(${error.message})`);
+          return false;
+        }
+      }
+
+      function loadState() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (!data || !Array.isArray(data.products) || !Array.isArray(data.events)) {
+          throw new Error('保存データの形式が正しくありません。');
+        }
+        state.products = data.products;
+        state.events = data.events;
+      }
+
+      function esc(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[char]);
+      }
+
+      function dateKey(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function renderPreview(image) {
+        $('#imagePreview').innerHTML = image ? `<img src="${image}" alt="選択した画像">` : '＋';
+      }
+
+      function renderProducts() {
+        const list = $('#productList');
+        $('#productCount').textContent = `${state.products.length}件`;
+        if (!state.products.length) {
+          list.innerHTML = '<div class="empty">商品がまだ登録されていません。<br>画面上部の「販売カウンター」を2秒長押しすると登録できます。</div>';
+          return;
+        }
+        list.innerHTML = state.products.map((product) => {
+          const total = state.events
+            .filter((event) => event.productId === product.id)
+            .reduce((sum, event) => sum + event.delta, 0);
+          const image = product.image
+            ? `<img src="${product.image}" alt="">`
+            : '▧';
+          return `<article class="product-card">
+            <div class="product-thumb">${image}</div>
+            <div class="product-info">
+              <p class="product-name">${esc(product.title)}</p>
+              <p class="product-person">担当：${esc(product.person)}</p>
+              <span class="product-total">現在 ${total} 個</span>
+            </div>
+            <div class="card-actions">
+              <button class="count-btn" type="button" data-action="plus" data-id="${esc(product.id)}" aria-label="${esc(product.title)}を1個販売">＋ 1個</button>
+              <button class="minus-btn" type="button" data-action="minus" data-id="${esc(product.id)}" aria-label="${esc(product.title)}のカウントを1個減らす">－ 1個</button>
+            </div>
+          </article>`;
+        }).join('');
+      }
+
+      function renderSummary() {
+        const selectedDate = $('#dateFilter').value;
+        const interval = Number($('#intervalFilter').value);
+        const dayEvents = state.events.filter((event) => dateKey(new Date(event.timestamp)) === selectedDate);
+        const total = dayEvents.reduce((sum, event) => sum + event.delta, 0);
+        $('#summaryTotal').innerHTML = `選択日の販売合計：<strong>${total}</strong> 個`;
+        $('#summaryHead').innerHTML = `<tr><th>時間帯</th><th>${state.groupBy === 'product' ? '商品' : '担当者'}</th>${state.groupBy === 'product' ? '<th>担当者</th>' : ''}<th>販売数</th></tr>`;
+
+        const grouped = new Map();
+        for (const event of dayEvents) {
+          const date = new Date(event.timestamp);
+          const minute = date.getHours() * 60 + date.getMinutes();
+          const startMinute = Math.floor(minute / interval) * interval;
+          const bucket = `${String(Math.floor(startMinute / 60)).padStart(2, '0')}:${String(startMinute % 60).padStart(2, '0')}`;
+          const name = state.groupBy === 'product' ? event.title : event.person;
+          const secondary = state.groupBy === 'product' ? event.person : '';
+          const key = `${bucket}\u0000${name}\u0000${secondary}`;
+          const current = grouped.get(key) || { bucket, name, secondary, count: 0 };
+          current.count += event.delta;
+          grouped.set(key, current);
+        }
+        const rows = [...grouped.values()].sort((a, b) =>
+          a.bucket.localeCompare(b.bucket) || a.name.localeCompare(b.name, 'ja') || a.secondary.localeCompare(b.secondary, 'ja')
+        );
+        $('#summaryBody').innerHTML = rows.length
+          ? rows.map((row) => `<tr>
+              <td class="bucket-label">${row.bucket}–${String(Math.floor((Number(row.bucket.slice(0, 2)) * 60 + Number(row.bucket.slice(3)) + interval) / 60) % 24).padStart(2, '0')}:${String((Number(row.bucket.slice(0, 2)) * 60 + Number(row.bucket.slice(3)) + interval) % 60).padStart(2, '0')}</td>
+              <td>${esc(row.name)}</td>
+              ${state.groupBy === 'product' ? `<td>${esc(row.secondary)}</td>` : ''}
+              <td class="number ${row.count < 0 ? 'negative' : ''}">${row.count}</td>
+            </tr>`).join('')
+          : `<tr><td colspan="${state.groupBy === 'product' ? 4 : 3}" class="empty">この日の記録はありません。</td></tr>`;
+      }
+
+      function render() {
+        renderProducts();
+        renderSummary();
+      }
+
+      function addEvent(product, delta) {
+        if (delta < 0) {
+          const current = state.events.filter((event) => event.productId === product.id)
+            .reduce((sum, event) => sum + event.delta, 0);
+          if (current <= 0) {
+            showNotice('カウントが0のため、これ以上減らせません。');
+            return;
+          }
+        }
+        const recordedEvent = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          productId: product.id,
+          title: product.title,
+          person: product.person,
+          timestamp: new Date().toISOString(),
+          delta
+        };
+        state.events.push(recordedEvent);
+        if (saveState()) render();
+        else state.events.pop();
+      }
+
+      $('#productList').addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const product = state.products.find((item) => item.id === button.dataset.id);
+        if (!product) return;
+        switch (button.dataset.action) {
+          case 'plus':
+            addEvent(product, 1);
+            break;
+          case 'minus':
+            addEvent(product, -1);
+            break;
+        }
+      });
+
+      let longPressTimer = null;
+      const titleHold = $('#titleHold');
+      titleHold.addEventListener('pointerdown', (event) => {
+        if (event.button !== undefined && event.button !== 0) return;
+        clearTimeout(longPressTimer);
+        longPressTimer = setTimeout(() => {
+          longPressTimer = null;
+          window.location.href = './register.html';
+        }, 2000);
+      });
+      ['pointerup', 'pointerleave', 'pointercancel'].forEach((type) =>
+        titleHold.addEventListener(type, () => {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        })
+      );
+      titleHold.addEventListener('contextmenu', (event) => event.preventDefault());
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+      });
+      $('#dateFilter').value = dateKey(new Date());
+      $('#dateFilter').addEventListener('change', renderSummary);
+      $('#intervalFilter').addEventListener('change', renderSummary);
+      document.querySelector('.grouping').addEventListener('click', (event) => {
+        const button = event.target.closest('[data-group]');
+        if (!button) return;
+        state.groupBy = button.dataset.group;
+        document.querySelectorAll('.group-button').forEach((item) =>
+          item.setAttribute('aria-pressed', String(item === button))
+        );
+        renderSummary();
+      });
+
+      $('#exportButton').addEventListener('click', () => {
+        const backup = {
+          format: 'counter-timed-backup',
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          products: state.products,
+          events: state.events
+        };
+        const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `販売カウンター_${dateKey(new Date())}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+      });
+
+      $('#clearLogsButton').addEventListener('click', () => {
+        if (!state.events.length) {
+          showNotice('削除する販売記録はありません。');
+          return;
+        }
+        if (window.confirm(`販売記録 ${state.events.length}件をすべて削除します。この操作は取り消せません。`)) {
+          const previousEvents = state.events;
+          state.events = [];
+          if (saveState()) render();
+          else state.events = previousEvents;
+        }
+      });
+
+      try {
+        loadState();
+        render();
+      } catch (error) {
+        showNotice(`保存データを読み込めませんでした。データを書き出して復旧を確認してください。(${error.message})`);
+        $('#productList').innerHTML = '<div class="empty">保存データを読み込めませんでした。</div>';
+      }
+    })();
+  </script>
+  <script src="./app.js"></script>
+</body>
+</html>

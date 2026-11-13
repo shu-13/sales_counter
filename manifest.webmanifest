@@ -1,0 +1,23 @@
+{
+  "id": "./",
+  "name": "販売カウンター",
+  "short_name": "販売カウンター",
+  "description": "商品ごと・担当者ごとの販売数と時刻を記録するカウンター",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f3ee",
+  "theme_color": "#f5f3ee",
+  "icons": [
+    {
+      "src": "./icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
